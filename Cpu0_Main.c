@@ -51,6 +51,15 @@
 #include "ConfigurationIsr.h"
 #include "Ifx_Lwip.h"
 #include "Echo.h"
+//#include "test_tcp_client.h"
+#include "lwip/dhcp.h"
+
+#include "lwip/ip_addr.h"      // For ip_addr_t, ip6_addr_t
+#include "lwip/tcp.h"          // For TCP client API (tcp_new, tcp_connect, etc.)
+#include "lwip/ip6_addr.h"     // For IPv6 utilities (ip6addr_aton, ip6_addr_cmp, etc.)
+#include "lwip/inet.h"         // For ipaddr_ntoa() to print IP addresses
+#include "lwip/netif.h"        // For netif_ip6_addr(), ip6_addr_isany()
+
 
 /*********************************************************************************************************************/
 /*-------------------------------------------------Global variables--------------------------------------------------*/
@@ -101,10 +110,28 @@ void core0_main (void)
 
     echoInit();                                             /* Initialize ECHO application                                  */
 
+   // ip_addr_t server_ip;
+
+    //IP4_ADDR(&server_ip,  172, 16, 8, 189); // Replace with your laptop/server IP
+
+
+    ip4_addr_t ipv4_server_addr;
+            IP4_ADDR(&ipv4_server_addr, 172,16,9,14);          // Replace with your laptop/server IP
+
+
+            ip_addr_t server_ip;
+            ip_addr_copy_from_ip4(server_ip, ipv4_server_addr);
+    // Set IPv6 server IP
     while (1)
     {
         Ifx_Lwip_pollTimerFlags();                          /* Poll LwIP timers and trigger protocols execution if required */
         Ifx_Lwip_pollReceiveFlags();                        /* Receive data package through ETH                             */
+        if (dhcp_supplied_address(&g_Lwip.netif))
+            {
+                tcp_client_poll_reconnect_ipv4(&server_ip, 5000);
+            }
+
+
     }
 }
 
